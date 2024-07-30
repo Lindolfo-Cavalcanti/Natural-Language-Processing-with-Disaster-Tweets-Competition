@@ -281,7 +281,7 @@ test_original = read_csv("Data/test.csv")
 
   # Remove URLs
 
-      url_pattern = "http[s]?://[^\\s]+"
+      url_pattern = "http"
   
       train_token = train_token |> tokens_remove(pattern = url_pattern)
 
@@ -297,11 +297,12 @@ test_original = read_csv("Data/test.csv")
 
       train_token = train_token[!is.na(train_token)]
 
+  
 # View token
 
       train_dfm = train_token |> dfm(tolower = FALSE)
 
-      train_dfm <- train_dfm |> dfm_trim(min_termfreq = 5)
+      train_dfm <- train_dfm |> dfm_trim(min_termfreq = 4)
 
 train_matrix = train_dfm |> as.matrix()
 
@@ -310,3 +311,23 @@ View(train_matrix)
 train_token_df = cbind(
   target = train_original$target, convert(train_dfm, to = "data.frame"))
 
+View(train_token_df)
+
+# Cleanup colnames
+
+ names(train_token_df) = make.names(names(train_token_df))
+
+# Create Model
+
+  # Cross Validation with caret
+
+    cv_folds = train_original$target |> caret::createMultiFolds(k = 10, times = 3 )
+    cv_cntrl = caret::trainControl(method = "repeatedcv", number = 10,
+      repeats = 3, index = cv_folds)
+
+
+  # doSNOW
+    library(doSNOW)
+
+    cl = makeCluster(4, type = "SOCK")
+    registerDoSNOW(cl)
