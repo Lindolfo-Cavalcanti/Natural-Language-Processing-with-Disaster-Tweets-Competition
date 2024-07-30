@@ -12,7 +12,7 @@ test_original = read_csv("Data/test.csv")
 
   # Tokenize
     
-    train_token = train_original |> corpus() |> tokens(what = "word",
+    train_token = train_original$text|> tokens(what = "word",
       remove_punct = TRUE,
       remove_symbols = TRUE,
       remove_numbers = TRUE,
@@ -301,7 +301,12 @@ test_original = read_csv("Data/test.csv")
 
       train_dfm = train_token |> dfm(tolower = FALSE)
 
+      train_dfm <- train_dfm |> dfm_trim(min_termfreq = 5)
+
 train_matrix = train_dfm |> as.matrix()
 
 View(train_matrix)
+
+train_token_df = cbind(
+  target = train_original$target, convert(train_dfm, to = "data.frame"))
 
