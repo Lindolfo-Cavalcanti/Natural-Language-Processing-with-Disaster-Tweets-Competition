@@ -1,43 +1,41 @@
 library(tidyverse)
+library(quanteda)
 library(caret)
 library(DT)
-library(tm)
-
-test_original = read_csv("Data/test.csv")
+library(quanteda.textstats)
 
 train_original = read_csv("Data/train.csv")
 
-# Explore Data
+test_original = read_csv("Data/test.csv")
 
-str(train_original)
+# Clean data
 
-train_original %>% is.na() %>% colSums()
-
-unique(train_original$keyword)
-
-unique(train_original$location)
-
-DT::datatable(train_original)
-
-# Clean Data
-
-  # Create a Corpus
-
-    corpus_train <- Corpus(VectorSource(train_original$text))
-    corpus_test <- Corpus(VectorSource(test_original$text))
+  # Tokenize
     
-  # Lower cases
+    train_token = train_original |> corpus() |> tokens(what = "word",
+      remove_punct = TRUE,
+      remove_symbols = TRUE,
+      remove_numbers = TRUE,
+      remove_hyphens = TRUE
+    )
 
-    corpus_train_clean = corpus_train %>% tm_map(content_transformer(tolower))
- 
-  # Remove Emotes
+  # To lower
+
+    train_token = train_token |> tokens_tolower()
+
+  # Remove stopwords
+
+    train_token = train_token |> tokens_remove(stopwords("en"))
+
+  # Remove emotes
+
+    emotes_patern = c("u0089û", "\U0001F600-\U0001F64F", "\U0001F300-\U0001F5FF", "\U0001F680-\U0001F6FF", "\U0001F1E0-\U0001F1FF", "\U00002702-\U000027B0", "\U000024C2-\U0001F251")
     
-    emotes_patern = c("\U0001F600-\U0001F64F", "\U0001F300-\U0001F5FF", "\U0001F680-\U0001F6FF", "\U0001F1E0-\U0001F1FF", "\U00002702-\U000027B0", "\U000024C2-\U0001F251")
-    corpus_train_clean = corpus_train_clean |> tm_map(removeWords, emotes_patern)
+    train_token = train_token |> tokens_remove(emotes_patern)
 
-  # Remove Contractions
+  # Replace contractions
 
-      contraction <- c("ain't",
+    contraction <- c("ain't",
     "aren't",
     "can't",
     "can't've",
@@ -154,8 +152,8 @@ DT::datatable(train_original)
     "you'll've",
     "you're",
     "you've")
-      
-      contraction_replacement <- c("am not",
+
+    contraction_replacement <- c("am not",
     "are not",
     "cannot",
     "cannot have",
@@ -273,43 +271,37 @@ DT::datatable(train_original)
     "you are",
     "you have")
 
-    contra <- data.frame(contraction = contraction, 
-      contraction_replacement = contraction_replacement)
-    
-    replace_contraction <- function(x, contraction) {
-      if (is.character(x)) {
-        for (i in 1:nrow(contraction)) {
-          x <- gsub(contraction$contraction[i], contraction$contraction_replacement[i], x, ignore.case = TRUE)
-        }
-      } else {
-        stop("Input 'x' deve ser um vetor de caracteres.")
-      }
-      return(x)
-    }
-    
-    corpus_train_clean <- corpus_train_clean |> 
-      tm_map(content_transformer(function(x) replace_contraction(x, contra)))
-    
-  # Remove punctuation 
+    train_token = train_token |> tokens_replace(pattern = contraction, 
+      replacement = contraction_replacement, valuetype = "fixed")
 
-    corpus_train_clean = corpus_train_clean |> tm_map(content_transformer(removePunctuation))
-    
-  # Stemming 
 
-    corpus_train_clean = corpus_train_clean |> tm_map(content_transformer(stemDocument))
-    
+  # Stemming
+
+      train_token = train_token |> tokens_wordstem(language = "english")
+
   # Remove URLs
 
-    corpus_train_clean = corpus_train_clean |> tm_map(content_transformer(function(x) gsub("\\S*http+\\S*", "", x)))
-    
-  # Remove stop words
-
-    corpus_train_clean = corpus_train_clean |> tm_map(removeWords, stopwords("english"))
+      url_pattern = "http[s]?://[^\\s]+"
+  
+      train_token = train_token |> tokens_remove(pattern = url_pattern)
 
   # Remove whitespace
 
-    corpus_train_clean = corpus_train_clean |> tm_map(stripWhitespace)
+      train_token = train_token |> tokens_remove(pattern = "\\s+")
 
-  
-      
-    
+  # Remove u0089û_
+
+      train_token = train_token |> tokens_remove(pattern = "u0089û_")
+
+  # Remove NA's
+
+      train_token = train_token[!is.na(train_token)]
+
+# View token
+
+      train_dfm = train_token |> dfm(tolower = FALSE)
+
+train_matrix = train_dfm |> as.matrix()
+
+View(train_matrix)
+
