@@ -4,6 +4,7 @@
   library(tidyverse)
   library(tm)
   library(caret)
+  library(quanteda.textmodels)
 
 # 2. Carregar e Preparar os Dados
   
@@ -284,6 +285,18 @@
   
   train.token = train.token %>% tokens_replace(pattern = contractions, replace = contractions.replacement)
   test.token = test.token %>% tokens_replace(pattern = contractions, replace = contractions.replacement)
+  
+  train.dfm = train.token %>% dfm()
+  test.dfm =  test.token %>% dfm()
+  
+  train.dtm = train.token %>% DocumentTermMatrix()
+  test.dtm = test.token %>% DocumentTermMatrix()
+  
+  train.tfidf = weightTfIdf(train.dtm)
+  test.tfidf = weightTfIdf(test.dtm)
+  
+  train.tfidf.2 = dfm_tfidf(train.dfm)
+  test.tfidf.2 = dfm_tfidf(test.dfm)
   
 # 5. Dividir os Dados em Conjuntos de Treinamento e Teste
 
