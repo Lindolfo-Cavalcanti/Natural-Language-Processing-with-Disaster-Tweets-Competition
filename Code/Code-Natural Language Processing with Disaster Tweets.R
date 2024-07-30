@@ -315,7 +315,7 @@ View(train_token_df)
 
 # Cleanup colnames
 
- names(train_token_df) = make.names(names(train_token_df))
+names(train_token_df) <- make.names(names(train_token_df), unique = TRUE)
 
 # Create Model
 
@@ -329,5 +329,13 @@ View(train_token_df)
   # doSNOW
     library(doSNOW)
 
-    cl = makeCluster(4, type = "SOCK")
+    cl = makeCluster(3, type = "SOCK")
     registerDoSNOW(cl)
+
+
+  # Build Model
+
+    xgbTree_cv_1 = caret::train(target ~ ., data = train_token_df,
+      method = "xgbTree", trControl = cv_cntrl, tuneLength = 7)
+
+stopCluster(cl)
