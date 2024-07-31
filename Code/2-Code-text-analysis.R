@@ -292,6 +292,9 @@ test.dfm =  test.token %>% dfm()
 train.tfidf = dfm_tfidf(train.dfm)
 test.tfidf = dfm_tfidf(test.dfm)
 
+train.tfidf.reduced = train.tfidf %>% dfm_trim(min_termfreq = 2)
+test.tfidf.reduced = test.tfidf %>% dfm_trim(min_termfreq = 2)
+
 matched.dfm = dfm_match(test.dfm, features = featnames(train.dfm))
 matched.dfm.tfidf = dfm_match(test.tfidf, features = featnames(train.tfidf))
 
