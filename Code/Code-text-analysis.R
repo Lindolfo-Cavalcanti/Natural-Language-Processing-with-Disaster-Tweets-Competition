@@ -30,9 +30,18 @@
   
 
 # 4. Tokenização e Criação do Corpus
-  
-  train.corpus = corpus(train.original$text)
-  test.corpus = corpus(test.original$text)
+
+docvars.train = data.frame(train.original$keyword, train.original$target)
+docvars.test = data.frame(test.original$keyword, test.original$target)
+
+train.corpus = corpus(train.original$text, docvars = docvars.train)
+test.corpus = corpus(test.original$text, docvars = docvars.test)
+
+doc.id = paste(train.original$id)
+docnames(train.corpus) = doc.id
+
+doc.id.test = paste(test.original$id)
+docnames(test.corpus) = doc.id.test
   
   train.token = tokens(train.corpus)
   test.token = tokens(test.corpus)
