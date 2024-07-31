@@ -304,6 +304,12 @@
   train.tfidf.2.reduced = dfm_tfidf(train.dfm.reduced)
   test.tfidf.2.reduced = dfm_tfidf(test.dfm.reduced)
   
+  data.frame.train.tfidf = train.tfidf.2.reduced %>% convert(to = "data.frame")
+  data.frame.test.tfidf = test.tfidf.2.reduced %>% convert(to = "data.frame")
+  
+  names(data.frame.train.tfidf) = make.names(names(data.frame.train.tfidf))
+  names(data.frame.test.tfidf) = make.names(names(data.frame.test.tfidf))
+  
   matched.dfm = dfm_match(test.dfm, features = featnames(train.dfm))
   matched.dfm.tfidf = dfm_match(test.tfidf.2, features = featnames(train.tfidf.2))
   
@@ -312,12 +318,41 @@
 
 # 6. Treinamento do Modelo
   
-  cv.folds = createMultiFolds(train.original$target, k = 10, times = 3)
-  cv.control = trainControl(method = "repeatedcv", number = 10, repeats = 3,
-                            index = cv.folds)
+  # Caret Rpart
   
-  model.rpart = caret::train(target ~ ., data = convert(train.tfidf.2.reduced, to = "data.frame"), 
-                             method = "rpart", trControl = cv.control, tuneLength = 7)
+  # Função para remover caracteres especiais dos nomes das colunas
+  clean_column_names <- function(colnames) {
+    colnames <- gsub("[^[:alnum:]_]", "", colnames) # Remove caracteres especiais, mantendo apenas letras, números e sublinhados
+    colnames <- make.names(colnames, unique = TRUE) # Garante nomes únicos e válidos para R
+    return(colnames)
+  }
+  
+  # Limpar nomes das colunas dos data frames
+  names(data.frame.train.tfidf) <- clean_column_names(names(data.frame.train.tfidf))
+  names(data.frame.test.tfidf.reduced) <- clean_column_names(names(data.frame.test.tfidf.reduced))
+  
+  
+    cv.folds = createMultiFolds(train.original$target, k = 10, times = 3)
+    cv.control = trainControl(method = "repeatedcv", number = 10, repeats = 3,
+                              index = cv.folds)
+    
+    model.rpart = caret::train(target ~ ., data = data.frame.train.tfidf, 
+                               method = "rpart", trControl = cv.control, tuneLength = 7)
+    
+    model.rpart
+    
+    data.frame.test.tfidf.reduced = matched.dfm.tfidf.reduced %>% 
+      convert(to = "data.frame")
+    
+    data.frame.test.tfidf.reduced$target = NA
+    
+    prediction.rpart = predict(model.rpart, newdata = data.frame.test.tfidf.reduced)
+    
+    dim(data.frame.test.tfidf.reduced)
+    dim(data.frame.train.tfidf)
+    
+  # Textmodels SVM
+    
 
 # 7. Avaliação do Modelo
 
