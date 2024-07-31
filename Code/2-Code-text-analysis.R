@@ -5,6 +5,8 @@ library(tidyverse)
 library(tm)
 library(caret)
 library(quanteda.textmodels)
+library(quanteda.textplots)
+library(RColorBrewer)
 
 # 2. Carregar e Preparar os Dados
 
@@ -28,11 +30,22 @@ test.original$text = test.original$text %>% removeWords(stopwords("en"))
 train.original$text = train.original$text %>% stripWhitespace()
 test.original$text = test.original$text %>% stripWhitespace()  
 
+test.original$target = NA
+
 
 # 4. Tokenização e Criação do Corpus
 
-train.corpus = corpus(train.original$text)
-test.corpus = corpus(test.original$text)
+docvars.train = data.frame(train.original$keyword, train.original$target)
+docvars.test = data.frame(test.original$keyword, test.original$target)
+
+train.corpus = corpus(train.original$text, docvars = docvars.train)
+test.corpus = corpus(test.original$text, docvars = docvars.test)
+
+doc.id = paste(train.original$id)
+docnames(train.corpus) = doc.id
+
+doc.id.test = paste(test.original$id)
+docnames(test.corpus) = doc.id.test
 
 train.token = tokens(train.corpus)
 test.token = tokens(test.corpus)
@@ -45,7 +58,10 @@ emojis <- c("\U0001F600-\U0001F64F", "\U0001F300-\U0001F5FF", "\U0001F680-\U0001
 train.token = train.token %>% tokens_remove(pattern = emojis)
 test.token = test.token %>% tokens_remove(pattern = emojis)
 
-contractions = c( 
+contractions = c(
+  "u",
+  "im",
+  "dont",
   "ain't",
   "aren't",
   "can't",
@@ -165,7 +181,7 @@ contractions = c(
   "you've"
 )
 
-contractions.replacement = c("am not",
+contractions.replacement = c("you", "I am","do not", "am not",
                              "are not",
                              "cannot",
                              "cannot have",
@@ -286,12 +302,24 @@ contractions.replacement = c("am not",
 train.token = train.token %>% tokens_replace(pattern = contractions, replace = contractions.replacement)
 test.token = test.token %>% tokens_replace(pattern = contractions, replace = contractions.replacement)
 
+train.token = train.token %>% tokens_select(pattern = stopwords("en"),
+                                            selection = "remove")
+test.token = test.token %>% tokens_select(pattern = stopwords("en"),
+                                          selection = "remove")
+
+additional.stopwords = c("like", "will", "just", "get", "i am", "us", "can", "do not", "û")
+
+train.token =  train.token %>% tokens_remove(additional.stopwords)
+
 train.dfm = train.token %>% dfm()
 test.dfm =  test.token %>% dfm()
 
+pal = brewer.pal(5, "Dark2")
+textplot_wordcloud(train.dfm, min_count = 50, max_words = 200)
+
 train.tfidf = dfm_tfidf(train.dfm)
 test.tfidf = dfm_tfidf(test.dfm)
-
+ 
 train.tfidf.reduced = train.tfidf %>% dfm_trim(min_termfreq = 2)
 test.tfidf.reduced = test.tfidf %>% dfm_trim(min_termfreq = 2)
 
