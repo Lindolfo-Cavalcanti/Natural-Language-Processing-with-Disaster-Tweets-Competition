@@ -315,6 +315,14 @@
   
   matched.dfm.reduced = dfm_match(test.dfm.reduced, features = featnames(train.dfm.reduced))
   matched.dfm.tfidf.reduced = dfm_match(test.tfidf.2.reduced, features = featnames(train.tfidf.2.reduced))
+  
+  data.frame.test.reduced = matched.dfm.reduced %>% 
+    convert(to = "data.frame")
+  
+  data.frame.test.reduced $target = NA
+  
+  dim(data.frame.test.reduced)
+  dim(data.frame.train.tfidf)
 
 # 6. Treinamento do Modelo
   
@@ -329,7 +337,7 @@
   
   # Limpar nomes das colunas dos data frames
   names(data.frame.train.tfidf) <- clean_column_names(names(data.frame.train.tfidf))
-  names(data.frame.test.tfidf.reduced) <- clean_column_names(names(data.frame.test.tfidf.reduced))
+  names(data.frame.test.reduced) <- clean_column_names(names(data.frame.test.reduced))
   
   
     cv.folds = createMultiFolds(train.original$target, k = 10, times = 3)
@@ -341,21 +349,6 @@
     
     model.rpart
     
-    data.frame.test.tfidf.reduced = matched.dfm.tfidf.reduced %>% 
-      convert(to = "data.frame")
+    prediction.rpart = predict(model.rpart, newdata = data.frame.test.reduced, type = "raw")
     
-    data.frame.test.tfidf.reduced$target = NA
-    
-    prediction.rpart = predict(model.rpart, newdata = data.frame.test.tfidf.reduced)
-    
-    dim(data.frame.test.tfidf.reduced)
-    dim(data.frame.train.tfidf)
-    
-  # Textmodels SVM
-    
-
-# 7. Avaliação do Modelo
-
-# 8. Ajuste e Melhoria do Modelo
-
-# 9. Exportar e Utilizar o Modelo
+    prediction.rpart
