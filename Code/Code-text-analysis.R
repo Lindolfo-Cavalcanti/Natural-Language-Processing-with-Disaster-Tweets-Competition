@@ -298,9 +298,14 @@
   train.tfidf.2 = dfm_tfidf(train.dfm)
   test.tfidf.2 = dfm_tfidf(test.dfm)
   
-# 5. Dividir os Dados em Conjuntos de Treinamento e Teste
+  matched.dfm = dfm_match(test.dfm, features = featnames(train.dfm))
+  matched.dfm.tfidf = dfm_match(test.tfidf.2, features = featnames(train.tfidf.2))
 
 # 6. Treinamento do Modelo
+  
+  cv.folds = createMultiFolds(train.original$target, k = 10, times = 3)
+  cv.control = trainControl(method = "repeatedcv", number = 10, repeats = 3,
+                            index = cv.folds)
 
 # 7. Avaliação do Modelo
 
