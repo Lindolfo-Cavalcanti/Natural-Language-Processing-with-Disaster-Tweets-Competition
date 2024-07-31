@@ -13,6 +13,20 @@ library(RColorBrewer)
 train.original = read_csv("Data/train.csv")
 test.original = read_csv("Data/test.csv")
 
+table(train.original$target) %>% prop.table()
+
+# 1 is a real disaster 
+# 0 is a fake
+
+train.original$target[train.original$target == "1"] = "true"
+train.original$target[train.original$target == "0"] = "false"
+
+train.original$target = as.factor(train.original$target)
+
+table(train.original$target) %>% prop.table()
+
+test.original$target = NA
+
 # 3. Pré-processamento dos Dados
 
 train.original$text = train.original$text %>% tolower()
@@ -29,9 +43,6 @@ test.original$text = test.original$text %>% removeWords(stopwords("en"))
 
 train.original$text = train.original$text %>% stripWhitespace()
 test.original$text = test.original$text %>% stripWhitespace()  
-
-test.original$target = NA
-
 
 # 4. Tokenização e Criação do Corpus
 
