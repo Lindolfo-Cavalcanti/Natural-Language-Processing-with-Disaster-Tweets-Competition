@@ -289,6 +289,9 @@
   train.dfm = train.token %>% dfm()
   test.dfm =  test.token %>% dfm()
   
+  train.dfm.reduced = train.dfm %>% dfm_trim(min_termfreq = 3)
+  test.dfm.reduced = test.dfm %>% dfm_trim(min_termfreq = 3)
+  
   train.dtm = train.token %>% DocumentTermMatrix()
   test.dtm = test.token %>% DocumentTermMatrix()
   
@@ -298,14 +301,23 @@
   train.tfidf.2 = dfm_tfidf(train.dfm)
   test.tfidf.2 = dfm_tfidf(test.dfm)
   
+  train.tfidf.2.reduced = dfm_tfidf(train.dfm.reduced)
+  test.tfidf.2.reduced = dfm_tfidf(test.dfm.reduced)
+  
   matched.dfm = dfm_match(test.dfm, features = featnames(train.dfm))
   matched.dfm.tfidf = dfm_match(test.tfidf.2, features = featnames(train.tfidf.2))
+  
+  matched.dfm.reduced = dfm_match(test.dfm.reduced, features = featnames(train.dfm.reduced))
+  matched.dfm.tfidf.reduced = dfm_match(test.tfidf.2.reduced, features = featnames(train.tfidf.2.reduced))
 
 # 6. Treinamento do Modelo
   
   cv.folds = createMultiFolds(train.original$target, k = 10, times = 3)
   cv.control = trainControl(method = "repeatedcv", number = 10, repeats = 3,
                             index = cv.folds)
+  
+  model.rpart = caret::train(target ~ ., data = convert(train.tfidf.2.reduced, to = "data.frame"), 
+                             method = "rpart", trControl = cv.control, tuneLength = 7)
 
 # 7. Avaliação do Modelo
 
