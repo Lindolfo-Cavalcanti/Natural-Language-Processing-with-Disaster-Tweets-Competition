@@ -329,15 +329,36 @@ pal = brewer.pal(5, "Dark2")
 textplot_wordcloud(train.dfm, min_count = 50, max_words = 200, color = pal)
 
 
+naive_bayes = textmodel_nb(x = train.dfm, y = train.original$target)
 
-
-
-train.tfidf = dfm_tfidf(train.dfm)
-test.tfidf = dfm_tfidf(test.dfm)
- 
-train.tfidf.reduced = train.tfidf %>% dfm_trim(min_termfreq = 2)
-test.tfidf.reduced = test.tfidf %>% dfm_trim(min_termfreq = 2)
+summary(naive_bayes)
 
 matched.dfm = dfm_match(test.dfm, features = featnames(train.dfm))
-matched.dfm.tfidf = dfm_match(test.tfidf, features = featnames(train.tfidf))
+
+predict.clas = predict(naive_bayes, newdata = matched.dfm)
+
+test.original$target = predict.clas
+
+test.original$target = as.character(test.original$target)
+
+test.submission = test.original
+
+test.submission$target[test.submission$target == "true"] = "1"
+test.submission$target[test.submission$target == "false"] = "0"
+
+View(test.submission)
+
+test.submission$keyword = NULL
+test.submission$location = NULL
+test.submission$text = NULL
+
+glimpse(test.submission)
+
+write_csv(test.submission, "submission.csv")
+
+#train.tfidf = dfm_tfidf(train.dfm)
+#test.tfidf = dfm_tfidf(test.dfm)
+ 
+
+#matched.dfm.tfidf = dfm_match(test.tfidf, features = featnames(train.tfidf))
 
