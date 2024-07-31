@@ -307,7 +307,7 @@ train.token = train.token %>% tokens_select(pattern = stopwords("en"),
 test.token = test.token %>% tokens_select(pattern = stopwords("en"),
                                           selection = "remove")
 
-additional.stopwords = c("like", "will", "just", "get", "i am", "us", "can", "do not", "û")
+additional.stopwords = c("like", "will", "just", "get", "i am", "us", "can", "do not", "û", "got")
 
 train.token =  train.token %>% tokens_remove(additional.stopwords)
 
@@ -315,7 +315,11 @@ train.dfm = train.token %>% dfm()
 test.dfm =  test.token %>% dfm()
 
 pal = brewer.pal(5, "Dark2")
-textplot_wordcloud(train.dfm, min_count = 50, max_words = 200)
+textplot_wordcloud(train.dfm, min_count = 50, max_words = 200, color = pal)
+
+
+
+
 
 train.tfidf = dfm_tfidf(train.dfm)
 test.tfidf = dfm_tfidf(test.dfm)
