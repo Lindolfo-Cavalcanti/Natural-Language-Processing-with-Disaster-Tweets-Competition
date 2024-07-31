@@ -343,12 +343,18 @@
     cv.folds = createMultiFolds(train.original$target, k = 10, times = 3)
     cv.control = trainControl(method = "repeatedcv", number = 10, repeats = 3,
                               index = cv.folds)
+
+    data.frame.train.tfidf$target = as.factor(data.frame.train.tfidf$target)
     
     model.rpart = caret::train(target ~ ., data = data.frame.train.tfidf, 
                                method = "rpart", trControl = cv.control, tuneLength = 7)
     
     model.rpart
+
+    data.frame.test.reduced$target = NA
+
+     data.frame.test.reduced$target = as.factor(data.frame.test.reduced$target)
     
-    prediction.rpart = predict(model.rpart, newdata = data.frame.test.reduced, type = "raw")
+    prediction.rpart = predict(model.rpart, newdata = data.frame.test.reduced)
     
     prediction.rpart
